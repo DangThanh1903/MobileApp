@@ -1,18 +1,12 @@
-package org.example.mobileapp.model;
+package org.example.mobileapp.DTO;
 
-import jakarta.persistence.*;
+
 import lombok.Getter;
 import lombok.Setter;
 
-
 @Getter
 @Setter
-@Entity
-@Table(name = "game_account")
-public class GameAccount {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class GameAccountRequest {
     private String username;
     private String password;
     private String status;
@@ -22,7 +16,5 @@ public class GameAccount {
     private int stone;
     private int gold;
     private double price;
-    private String name;
-    private double tax;
-}
 
+}

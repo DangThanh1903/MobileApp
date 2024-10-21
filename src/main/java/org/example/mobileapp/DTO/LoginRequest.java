@@ -1,4 +1,4 @@
-package org.example.mobileapp.dto;
+package org.example.mobileapp.DTO;
 
 
 import lombok.Getter;
@@ -6,9 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class LoginDTO {
+public class LoginRequest {
     private String username;
     private String password;
-
-    // Getters and Setters
 }

@@ -1,16 +1,18 @@
 package org.example.mobileapp.service;
 
-import org.example.mobileapp.dto.AccountDTO;
-import org.example.mobileapp.dto.LoginDTO;
-import org.example.mobileapp.model.Account;
-import org.example.mobileapp.model.Employee;
+
+import org.example.mobileapp.DTO.CreateAccountRequest;
+import org.example.mobileapp.DTO.LoginRequest;
+import org.example.mobileapp.model.*;
 import org.example.mobileapp.repository.AccountRepository;
 import org.example.mobileapp.repository.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.Optional;
+
 
 @Service
 public class AccountService {
@@ -21,42 +23,48 @@ public class AccountService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    // Register new account
-    public void register(AccountDTO accountDTO) {
-        Optional<Account> existingAccount = accountRepository.findByUsername(accountDTO.getUsername());
-        if (existingAccount.isPresent()) {
-            throw new IllegalStateException("Username already taken");
+    public ResponseEntity<?> login(LoginRequest loginRequest) {
+        Optional<Account> account = accountRepository.findByUsername(loginRequest.getUsername());
+        if (account.isPresent() && account.get().getPassword().equals(loginRequest.getPassword())) {
+            return ResponseEntity.ok("Login successful for " + account.get().getUsername());
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+    }
+
+    public ResponseEntity<?> createAccount(CreateAccountRequest request) {
+        if (accountRepository.findByUsername(request.getUsername()) != null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Account already exists");
         }
 
-        // Create and save a new employee for the account
-        Employee employee = new Employee();
-        employee.setName(accountDTO.getEmployeeName());
-        employee.setLevel(accountDTO.getLevel());  // 0 = Admin, 1 = Staff
-        employee.setStartDate(LocalDate.now());
-        employee.setImagePath(accountDTO.getImagePath());
-
-        Employee savedEmployee = employeeRepository.save(employee);
-
-        // Create and save the account
         Account account = new Account();
-        account.setUsername(accountDTO.getUsername());
-        account.setPassword(accountDTO.getPassword());  // In production, you should hash passwords
-        account.setEmployee(savedEmployee);
-
+        account.setUsername(request.getUsername());
+        account.setPassword(request.getPassword());
         accountRepository.save(account);
-    }
 
-    // Login logic
-    public boolean login(LoginDTO loginDTO) {
-        Optional<Account> accountOptional = accountRepository.findByUsername(loginDTO.getUsername());
-
-        if (accountOptional.isPresent()) {
-            Account account = accountOptional.get();
-
-            // Simple password check (should hash passwords in production)
-            return account.getPassword().equals(loginDTO.getPassword());  // Login success
+        // Create an associated Employee record based on the account role
+        Employee employee;
+        switch (request.getRole()) {
+            case "admin":
+                employee = new Admin();
+                break;
+            case "accountant":
+                employee = new Accountant();
+                break;
+            case "worker":
+                employee = new Worker();
+                break;
+            default:
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid role");
         }
-        return false;  // Login failed
+        employee.setAccount(account);
+        employee.setName(request.getName());
+        employee.setAge(request.getAge());
+        employeeRepository.save(employee);
+
+        return ResponseEntity.ok("Account created for " + request.getRole());
     }
 
+    // Additional methods for account management
 }
+
+

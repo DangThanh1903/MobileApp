@@ -4,22 +4,19 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+@Entity
 @Getter
 @Setter
-@Entity
-@Table(name = "account")
-public class Account {
+@Table(name = "salary")
+public class Salary {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String username;
-
-    @Column(nullable = false)
-    private String password;
-
-    @OneToOne(mappedBy = "account")
+    @ManyToOne
     private Employee employee;
+    private double amount;
+    private String week;
+    private double basic;
+    private double bonus;
 }
-
